@@ -1,0 +1,2050 @@
+[
+    {
+        "id": "722aa5038d688b69",
+        "type": "tab",
+        "label": "Cap",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "c478ca5e960c2964",
+        "type": "serial in",
+        "z": "722aa5038d688b69",
+        "name": "",
+        "serial": "c3132729de11db57",
+        "x": 190,
+        "y": 980,
+        "wires": [
+            [
+                "c7146911b6b2fbf9"
+            ]
+        ]
+    },
+    {
+        "id": "32b79dda2963c808",
+        "type": "function",
+        "z": "722aa5038d688b69",
+        "name": "CSV to JSON filter",
+        "func": "// Get the user's selected start and end times from the form\nlet startTime = msg.payload.Date.startTime;\nlet endTime =   msg.payload.Date.endTime;\n\n// Get the CSV data from the msg.csvData (from the File node)\nlet csvData = msg.payload.File;\n\n// Split the CSV data into rows\nlet rows = csvData.split(\"\\n\").filter(row => row.trim() !== \"\");\n\n// Remove the header (first row) to get only the data rows\nrows.shift();\n\n// Arrays to hold the filtered data for each series\nlet temperatureData = [];\nlet humidityData = [];\nlet smokeData = [];\n\n// Loop through each row in the CSV file\nfor (let i = 0; i < rows.length; i++) {\n    let columns = rows[i].split(\",\");\n\n    // Extract timestamp and convert it to a number\n    let timestamp = Number(columns[0]);\n\n    // Filter the data points by checking if they fall within the selected time range\n    if (timestamp >= startTime && timestamp <= endTime) {\n        let temperature = Number(columns[1]);\n        let humidity = Number(columns[3]);\n        let smoke = Number(columns[5]);\n\n        // Push the filtered data points to the corresponding arrays\n        temperatureData.push({ x: timestamp, y: temperature });\n        humidityData.push({ x: timestamp, y: humidity });\n        smokeData.push({ x: timestamp, y: smoke });\n    }\n}\n\n// Rebuild the payload with the filtered data, formatted for the ui_chart node\nlet filteredPayload = {\n    \"series\": [\"Temperature\", \"Humidity\", \"Smoke\"],\n    \"data\": [temperatureData, humidityData, smokeData],\n    \"labels\": [\"\"]\n};\n\n// Set the new payload to send to the chart node\nmsg.payload = [filteredPayload];\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1710,
+        "y": 1740,
+        "wires": [
+            [
+                "166a8a5c8a4fe787"
+            ]
+        ]
+    },
+    {
+        "id": "7af4e4aecd0b8587",
+        "type": "function",
+        "z": "722aa5038d688b69",
+        "name": "function 1",
+        "func": "\nmsg.payload = {\n    startTime:msg.payload.sMin*60000,\n    endTime:msg.payload.eMin*60000\n    }\n\nmsg.topic = \"Date\";\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 620,
+        "y": 1740,
+        "wires": [
+            [
+                "c9a56b97d04c2d82"
+            ]
+        ]
+    },
+    {
+        "id": "166a8a5c8a4fe787",
+        "type": "ui_chart",
+        "z": "722aa5038d688b69",
+        "name": "Searching chart",
+        "group": "91e3155fe81caa6b",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "label": "",
+        "chartType": "line",
+        "legend": "true",
+        "xformat": "mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": true,
+        "ymin": "",
+        "ymax": "",
+        "removeOlder": "100",
+        "removeOlderPoints": "1000",
+        "removeOlderUnit": "604800",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#ff4343",
+            "#4344ff",
+            "#c8c8c8",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 2000,
+        "y": 1740,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "90dc7e0a3bc9ad81",
+        "type": "ui_form",
+        "z": "722aa5038d688b69",
+        "name": "",
+        "label": "Search Time",
+        "group": "91e3155fe81caa6b",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "options": [
+            {
+                "label": "Start Time Min",
+                "value": "sMin",
+                "type": "number",
+                "required": true,
+                "rows": null
+            },
+            {
+                "label": "End Time Min",
+                "value": "eMin",
+                "type": "number",
+                "required": true,
+                "rows": null
+            }
+        ],
+        "formValue": {
+            "sMin": "",
+            "eMin": ""
+        },
+        "payload": "",
+        "submit": "submit",
+        "cancel": "cancel",
+        "topic": "File",
+        "topicType": "str",
+        "splitLayout": true,
+        "className": "",
+        "x": 430,
+        "y": 1740,
+        "wires": [
+            [
+                "7af4e4aecd0b8587",
+                "3d4891337271346c"
+            ]
+        ]
+    },
+    {
+        "id": "5fb6e09c1117776f",
+        "type": "trigger",
+        "z": "722aa5038d688b69",
+        "d": true,
+        "name": "",
+        "op1": "true",
+        "op2": "0",
+        "op1type": "bool",
+        "op2type": "str",
+        "duration": "-5",
+        "extend": false,
+        "overrideDelay": false,
+        "units": "s",
+        "reset": "",
+        "bytopic": "all",
+        "topic": "topic",
+        "outputs": 1,
+        "x": 640,
+        "y": 2540,
+        "wires": [
+            [
+                "40695e5f79a8ca73"
+            ]
+        ]
+    },
+    {
+        "id": "8cef92a72685c2af",
+        "type": "inject",
+        "z": "722aa5038d688b69",
+        "d": true,
+        "name": "",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "0",
+        "topic": "",
+        "payload": "",
+        "payloadType": "str",
+        "x": 310,
+        "y": 2540,
+        "wires": [
+            [
+                "e6e574ac52dded40"
+            ]
+        ]
+    },
+    {
+        "id": "40695e5f79a8ca73",
+        "type": "file in",
+        "z": "722aa5038d688b69",
+        "d": true,
+        "name": "File In",
+        "filename": "$flowContext(\"DataFilePath\")",
+        "filenameType": "jsonata",
+        "format": "utf8",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "allProps": false,
+        "x": 810,
+        "y": 2540,
+        "wires": [
+            [
+                "1b1e78c07d04a9dc"
+            ]
+        ]
+    },
+    {
+        "id": "1b1e78c07d04a9dc",
+        "type": "function",
+        "z": "722aa5038d688b69",
+        "d": true,
+        "name": "filter",
+        "func": "\n// let tempWindow = 10000;\nlet csvData = msg.payload;\n\n// Split the CSV data into rows\nlet rows = csvData.split(\"\\n\").filter(row => row.trim() !== \"\");\n\n// Remove the header (first row) to get only the data rows\nrows.shift();\n\n// Arrays to hold the filtered data for each series\nlet temperatureData = [];\nlet humidityData = [];\nlet noiseData = [];\n\n// Loop through each row in the CSV file\nfor (let i = 0; i < rows.length; i++) {\n    let columns = rows[i].split(\",\");\n\n    // Extract timestamp and convert it to a number\n    let timestamp = Number(columns[0]);\n\n    let temperature = Number(columns[1]);\n    let humidity = Number(columns[2]);\n    let noise = Number(columns[3]);\n    \n    // Push the filtered data points to the corresponding arrays\n    temperatureData.push( {x:timestamp,y:temperature} );\n    humidityData.push({x:timestamp,y:humidity} );  \n    noiseData.push( {x:timestamp,y:noise} );\n}\n\n// Set the new payload to send to the chart node\nmsg.payload = {\n    \"Temperature\": temperatureData,\n    \"Humidity\": humidityData,\n    \"Noise\": noiseData\n};\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 950,
+        "y": 2540,
+        "wires": [
+            [
+                "46ad05954805dce4"
+            ]
+        ]
+    },
+    {
+        "id": "e5c5f55d1077fd0c",
+        "type": "ui_text",
+        "z": "722aa5038d688b69",
+        "d": true,
+        "group": "",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "name": "fromTemp",
+        "label": "probability of component failure :",
+        "format": "{{msg.payload}}",
+        "layout": "row-left",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 1840,
+        "y": 2480,
+        "wires": []
+    },
+    {
+        "id": "4a4fabe070aa0542",
+        "type": "ui_text",
+        "z": "722aa5038d688b69",
+        "d": true,
+        "group": "",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "name": "fromHum",
+        "label": "probability of corrosion/short circuit :",
+        "format": "{{msg.payload}}",
+        "layout": "row-left",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 1840,
+        "y": 2520,
+        "wires": []
+    },
+    {
+        "id": "92f950911833e546",
+        "type": "ui_text",
+        "z": "722aa5038d688b69",
+        "d": true,
+        "group": "",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "name": "fromNoise",
+        "label": "probability of fan failure :",
+        "format": "{{msg.payload}}",
+        "layout": "row-left",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 1850,
+        "y": 2560,
+        "wires": []
+    },
+    {
+        "id": "be65942486872434",
+        "type": "ui_text",
+        "z": "722aa5038d688b69",
+        "d": true,
+        "group": "",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "name": "hardFromNoise",
+        "label": "probability of hard drive failure :",
+        "format": "{{msg.payload}}",
+        "layout": "row-left",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 1860,
+        "y": 2600,
+        "wires": []
+    },
+    {
+        "id": "6eaffa1e2c48b902",
+        "type": "ui_text",
+        "z": "722aa5038d688b69",
+        "d": true,
+        "group": "",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "name": "immFromNoise",
+        "label": "probability of immediate component failure :",
+        "format": "{{msg.payload}}",
+        "layout": "row-left",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 1860,
+        "y": 2640,
+        "wires": []
+    },
+    {
+        "id": "f0a5ba85dad518b1",
+        "type": "function",
+        "z": "722aa5038d688b69",
+        "d": true,
+        "name": "TempProbability ",
+        "func": "let sustainedTemp1Hour = flow.get(\"sustainedTemp1Hour\");\nlet sustainedTemp2Hour = flow.get(\"sustainedTemp2Hour\");\nlet sustainedTemp3Hour = flow.get(\"sustainedTemp3Hour\");\nlet sustainedTemp1HourProb = flow.get(\"sustainedTemp1HourProb\");\nlet sustainedTemp2HourProb = flow.get(\"sustainedTemp2HourProb\");\nlet sustainedTemp3HourProb = flow.get(\"sustainedTemp3HourProb\");\nlet data = msg.payload;\n\n// Define the number of points for each time period (since each point is 30 seconds apart)\nconst oneHourPoints = flow.get(\"MeasuresHourlyRate\");;\nconst twoHoursPoints = 2*oneHourPoints;\n\n// Check if there is at least 1 hour of data (120 data points for 30 seconds interval)\nif (data.length < oneHourPoints) {\n    msg.payload = null;\n    return msg;\n}\n\n\n\n// Find the number of points available in the last 3 hours (if available)\nlet startIndex3Hours = data.length >= oneHourPoints ? data.length - oneHourPoints : 0;\nlet startIndex2Hours = data.length >= twoHoursPoints ? data.length - twoHoursPoints : 0;\nlet startIndex1Hour = data.length >= oneHourPoints ? data.length - oneHourPoints : 0;\n\n// Check last 3 hours for sustained temperature of 35°C\nlet isSustainedFor3Hours = data.slice(startIndex3Hours).every(point => point.y >= sustainedTemp3Hour);\n\n// Check last 2 hours for sustained temperature of 30°C\nlet isSustainedFor2Hours = data.slice(startIndex2Hours).every(point => point.y >= sustainedTemp2Hour);\n\n// Check last 1 hour for sustained temperature of 28°C\nlet isSustainedFor1Hour = data.slice(startIndex1Hour).every(point => point.y >= sustainedTemp1Hour);\n\n// Determine the failure probability\nlet failureProbability = 0;\n\nif (isSustainedFor3Hours) {\n    failureProbability = sustainedTemp3HourProb;\n} else if (isSustainedFor2Hours) {\n    failureProbability = sustainedTemp2HourProb;\n} else if (isSustainedFor1Hour) {\n    failureProbability = sustainedTemp1HourProb;\n}\n\n// Return the failure probability or 0% if no sustained temperature\nmsg.payload = failureProbability + \"%\";\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1600,
+        "y": 2480,
+        "wires": [
+            [
+                "e5c5f55d1077fd0c"
+            ]
+        ]
+    },
+    {
+        "id": "b20dd4b916b8dd5c",
+        "type": "switch",
+        "z": "722aa5038d688b69",
+        "d": true,
+        "name": "",
+        "property": "topic",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "Temperature",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "Humidity",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "Noise",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 3,
+        "x": 1210,
+        "y": 2540,
+        "wires": [
+            [
+                "f0a5ba85dad518b1"
+            ],
+            [
+                "5eb0a63c53aade71"
+            ],
+            [
+                "7b3a81b09295ab8b",
+                "cc9b215acc3c6b40",
+                "934da97856c17234"
+            ]
+        ]
+    },
+    {
+        "id": "46ad05954805dce4",
+        "type": "split",
+        "z": "722aa5038d688b69",
+        "d": true,
+        "name": "",
+        "splt": "\\n",
+        "spltType": "str",
+        "arraySplt": 1,
+        "arraySpltType": "len",
+        "stream": false,
+        "addname": "topic",
+        "property": "payload",
+        "x": 1090,
+        "y": 2540,
+        "wires": [
+            [
+                "b20dd4b916b8dd5c"
+            ]
+        ]
+    },
+    {
+        "id": "5eb0a63c53aade71",
+        "type": "function",
+        "z": "722aa5038d688b69",
+        "d": true,
+        "name": "HumProbability ",
+        "func": "let data = msg.payload;\nlet sustainedHum1Hour = flow.get(\"sustainedHum1Hour\");\nlet sustainedHum2Hour = flow.get(\"sustainedHum2Hour\");\nlet sustainedHum4Hour = flow.get(\"sustainedHum4Hour\");\nlet sustainedHum1HourProb = flow.get(\"sustainedHum1HourProb\");\nlet sustainedHum2HourProb = flow.get(\"sustainedHum2HourProb\");\nlet sustainedHum4HourProb = flow.get(\"sustainedHum4HourProb\");\n// Define the number of points for each time period (since each point is 30 seconds apart)\nconst oneHourPoints = flow.get(\"MeasuresHourlyRate\");;\nconst twoHoursPoints = 2*oneHourPoints;\nconst fourHoursPoints = 4*oneHourPoints;\n\n// Check if there is at least 1 hour of data (120 data points for 30 seconds interval)\nif (data.length < oneHourPoints) {\n    msg.payload = null;\n    return msg;\n}\n\n\n\n// Find the number of points available in the last 3 hours (if available)\nlet startIndex4Hours = data.length >= fourHoursPoints ? data.length - fourHoursPoints : 0;\nlet startIndex2Hours = data.length >= twoHoursPoints ? data.length - twoHoursPoints : 0;\nlet startIndex1Hour = data.length >= oneHourPoints ? data.length - oneHourPoints : 0;\n\n// Check last 4 hours for sustained temperature of 35°C\nlet isSustainedFor4Hours = data.slice(startIndex4Hours).every(point => point.y >= sustainedHum4Hour);\n\n// Check last 2 hours for sustained temperature of 30°C\nlet isSustainedFor2Hours = data.slice(startIndex2Hours).every(point => point.y >= sustainedHum2Hour);\n\n// Check last 1 hour for sustained temperature of 28°C\nlet isSustainedFor1Hour = data.slice(startIndex1Hour).every(point => point.y >= sustainedHum1Hour);\n\n// Determine the failure probability\nlet failureProbability = 0;\n\nif (isSustainedFor1Hour) {\n    failureProbability = sustainedHum1HourProb;\n} else if (isSustainedFor2Hours) {\n    failureProbability = sustainedHum2HourProb;\n} else if (isSustainedFor4Hours) {\n    failureProbability = sustainedHum4HourProb;\n}\n\n// Return the failure probability or 0% if no sustained temperature\nmsg.payload = failureProbability + \"%\";\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1600,
+        "y": 2520,
+        "wires": [
+            [
+                "4a4fabe070aa0542"
+            ]
+        ]
+    },
+    {
+        "id": "7b3a81b09295ab8b",
+        "type": "function",
+        "z": "722aa5038d688b69",
+        "d": true,
+        "name": "FanProbability ",
+        "func": "let data = msg.payload;\nlet sustainedNoiseFanThreshold = flow.get(\"sustainedNoiseFanThreshold\");\nlet sustainedNoiseFanProb = flow.get(\"sustainedNoiseFanProb\");\n// Define the number of points for each time period (since each point is 30 seconds apart)\nconst oneHourPoints = flow.get(\"MeasuresHourlyRate\");;\n\n// Check if there is at least 1 hour of data (120 data points for 30 seconds interval)\nif (data.length < oneHourPoints) {\n    msg.payload = null;\n    return msg;\n}\n\nlet startIndex1Hour = data.length >= oneHourPoints ? data.length - oneHourPoints : 0;\n\n// Check last 1 hour for sustained temperature of 28°C\nlet isSustainedFor1Hour = data.slice(startIndex1Hour).every(point => point.y >= sustainedNoiseFanThreshold);\n\n// Determine the failure probability\nlet failureProbability = 0;\nif (isSustainedFor1Hour) {\n    failureProbability = sustainedNoiseFanProb;\n}\n\n// Return the failure probability or 0% if no sustained temperature\nmsg.payload = failureProbability + \"%\";\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1600,
+        "y": 2560,
+        "wires": [
+            [
+                "92f950911833e546"
+            ]
+        ]
+    },
+    {
+        "id": "cc9b215acc3c6b40",
+        "type": "function",
+        "z": "722aa5038d688b69",
+        "d": true,
+        "name": "HardProbability ",
+        "func": "let data = msg.payload;\nlet sustainedNoiseHardThreshold = flow.get(\"sustainedNoiseHardThreshold\");\nlet sustainedNoiseHardProb = flow.get(\"sustainedNoiseHardProb\");\n// Define the number of points for each time period (since each point is 30 seconds apart)\nconst oneHourPoints = flow.get(\"MeasuresHourlyRate\");;\n\n// Check if there is at least 1 hour of data (120 data points for 30 seconds interval)\nif (data.length < oneHourPoints) {\n    msg.payload = null;\n    return msg;\n}\n\nlet startIndex1Hour = data.length >= oneHourPoints ? data.length - oneHourPoints : 0;\n\n// Check last 1 hour for sustained temperature of 28°C\nlet isSustainedFor1Hour = data.slice(startIndex1Hour).every(point => point.y >= sustainedNoiseHardThreshold);\n\n// Determine the failure probability\nlet failureProbability = 0;\nif (isSustainedFor1Hour) {\n    failureProbability = sustainedNoiseHardProb;\n}\n\n// Return the failure probability or 0% if no sustained temperature\nmsg.payload = failureProbability + \"%\";\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1600,
+        "y": 2600,
+        "wires": [
+            [
+                "be65942486872434"
+            ]
+        ]
+    },
+    {
+        "id": "934da97856c17234",
+        "type": "function",
+        "z": "722aa5038d688b69",
+        "d": true,
+        "name": "ImmProbability ",
+        "func": "let data = msg.payload;\nlet sustainedNoiseImmThreshold = flow.get(\"sustainedNoiseImmThreshold\");\nlet sustainedNoiseImmProb = flow.get(\"sustainedNoiseImmProb\");\n// Define the number of points for each time period (since each point is 30 seconds apart)\nconst oneHourPoints = flow.get(\"MeasuresHourlyRate\");\n\n// Check if there is at least 1 hour of data (120 data points for 30 seconds interval)\nif (data.length < oneHourPoints) {\n    msg.payload = null;\n    return msg;\n}\n\nlet startIndex1Hour = data.length >= oneHourPoints ? data.length - oneHourPoints : 0;\n\n// Check last 1 hour for sustained temperature of 28°C\nlet isSustainedFor1Hour = data.slice(startIndex1Hour).every(point => point.y >= sustainedNoiseImmThreshold);\n\n// Determine the failure probability\nlet failureProbability = 0;\nif (isSustainedFor1Hour) {\n    failureProbability = sustainedNoiseImmProb;\n}\n\n// Return the failure probability or 0% if no sustained temperature\nmsg.payload = failureProbability + \"%\";\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1600,
+        "y": 2640,
+        "wires": [
+            [
+                "6eaffa1e2c48b902"
+            ]
+        ]
+    },
+    {
+        "id": "5858de511ff3b464",
+        "type": "function",
+        "z": "722aa5038d688b69",
+        "name": "Parameters",
+        "func": "\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "flow.set(\"DataFilePath\",\"D:\\\\Work\\\\STEM\\\\2024\\\\data.csv\");\nflow.set(\"AlarmFilePath\", \"D:\\\\Work\\\\STEM\\\\2024\\\\reem\\\\audio\\\\alarm.mp3\");\nflow.set(\"TempOverHeating\"              , 27);\nflow.set(\"TempFixedError\"               ,  0);\nflow.set(\"TempPercentError\"             ,  2);\nflow.set(\"HumLowThreshold\"              , 30);\nflow.set(\"HumHighThreshold\"             , 70);\nflow.set(\"HumFixedError\"                ,  0);\nflow.set(\"HumPercentError\"              ,  2);\nflow.set(\"SmokeHighThreshold\"           , 80);\nflow.set(\"SmokeFixedError\"              ,  0);\nflow.set(\"SmokePercentError\"            ,  2);\nflow.set(\"TempSolveThreshold\"           ,  100);\nflow.set(\"HumSolveThreshold\"            ,  100);\nflow.set(\"SmokeSolveThreshold\"          ,  100);\n\n// flow.set(\"SystemCriticalTemp\"           , 26);\n// flow.set(\"SystemCriticalHum\"            , 65);\n// flow.set(\"SystemCriticalSmoke\"          , 75);\n// flow.set(\"MeasuresHourlyRate\"           , 12); // measurements per hour to be used in prediction\n// flow.set(\"sustainedTemp1Hour\"           , 28);\n// flow.set(\"sustainedTemp2Hour\"           , 30);\n// flow.set(\"sustainedTemp3Hour\"           , 35);\n// flow.set(\"sustainedTemp1HourProb\"       , 10);\n// flow.set(\"sustainedTemp2HourProb\"       , 30);\n// flow.set(\"sustainedTemp3HourProb\"       , 70);\n// flow.set(\"sustainedHum1Hour\"            , 80);\n// flow.set(\"sustainedHum2Hour\"            , 75);\n// flow.set(\"sustainedHum4Hour\"            , 25);\n// flow.set(\"sustainedHum1HourProb\"        , 50);\n// flow.set(\"sustainedHum2HourProb\"        , 20);\n// flow.set(\"sustainedHum4HourProb\"        ,  5);\n// flow.set(\"sustainedSmokeFanThreshold\"   , 82);\n// flow.set(\"sustainedSmokeFanProb\"        , 15);\n// flow.set(\"sustainedSmokeHardThreshold\"  , 85);\n// flow.set(\"sustainedSmokeHardProb\"       , 40);\n// flow.set(\"sustainedSmokeImmThreshold\"   , 90);\n// flow.set(\"sustainedSmokeImmProb\"        , 60);",
+        "finalize": "",
+        "libs": [],
+        "x": 290,
+        "y": 1200,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "e6e574ac52dded40",
+        "type": "file",
+        "z": "722aa5038d688b69",
+        "d": true,
+        "name": "Clear On Start",
+        "filename": "$flowContext(\"DataFilePath\")",
+        "filenameType": "jsonata",
+        "appendNewline": false,
+        "createDir": true,
+        "overwriteFile": "true",
+        "encoding": "none",
+        "x": 460,
+        "y": 2540,
+        "wires": [
+            [
+                "5fb6e09c1117776f"
+            ]
+        ]
+    },
+    {
+        "id": "eb34aa64a4deae73",
+        "type": "function",
+        "z": "722aa5038d688b69",
+        "name": "systemData",
+        "func": "\nlet timestamp = msg.payload.Timestamp;\nlet smoke = msg.payload.Smoke;\nlet humidity = msg.payload.Humidity;\nlet temperature = msg.payload.Temperature;\nvar tempObj = { x: timestamp, y: temperature };\nvar humObj = { x: timestamp, y: humidity };\nvar smokeObj = { x: timestamp, y: smoke };\nvar pointsData = flow.get(\"PointsData\");\npointsData.payload[0].data[0].push(tempObj);\npointsData.payload[0].data[1].push(humObj);\npointsData.payload[0].data[2].push(smokeObj);\nflow.set(\"PointsData\", pointsData);\n\nreturn pointsData;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "// Code added here will be run once\n// whenever the node is started.\n\nvar pointsData = {\n    \"payload\": [{\n        \"series\": [\"Temperature\", \"Humidity\", \"Smoke\"],\n        \"data\": [[], [], []],\n        \"labels\": [\"\"]\n    }]\n}\n\nflow.set(\"PointsData\", pointsData);\n",
+        "finalize": "",
+        "libs": [],
+        "x": 790,
+        "y": 860,
+        "wires": [
+            [
+                "fdd437f14ee08633"
+            ]
+        ]
+    },
+    {
+        "id": "1f7c53cfb5a7c8c4",
+        "type": "function",
+        "z": "722aa5038d688b69",
+        "name": "Temperature Error",
+        "func": "let fixedError = flow.get(\"TempFixedError\");\nlet percentError = flow.get(\"TempPercentError\");\nlet TempData = context.get(\"TempData\");\nlet timestamp = msg.payload.Timestamp;\nlet value = msg.payload.Temperature;\nvar reading = { x: timestamp, y: value };\nvar positive = { x: timestamp, y: value*(1+percentError/100) + fixedError };\nvar negative = { x: timestamp, y: value*(1-percentError/100) - fixedError};\n\nTempData.payload[0].data[0].push(reading);\nTempData.payload[0].data[1].push(positive);\nTempData.payload[0].data[2].push(negative);\ncontext.set(\"TempData\", TempData);\nreturn TempData;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "// Code added here will be run once\n// whenever the node is started.\nvar TempData = {\n    \"payload\": [{\n        \"series\": [\"Temperature\", \"+e\", \"-e\"],\n        \"data\": [[], [], []],\n        \"labels\": [\"\"]\n    }]\n}\ncontext.set(\"TempData\", TempData);",
+        "finalize": "",
+        "libs": [],
+        "x": 810,
+        "y": 780,
+        "wires": [
+            [
+                "67caee253fd33f94"
+            ]
+        ]
+    },
+    {
+        "id": "67caee253fd33f94",
+        "type": "ui_chart",
+        "z": "722aa5038d688b69",
+        "name": "",
+        "group": "2b6079ac8014e3d5",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "label": "Temperature",
+        "chartType": "line",
+        "legend": "true",
+        "xformat": "mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": true,
+        "ymin": "",
+        "ymax": "",
+        "removeOlder": "100",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "604800",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#ff4343",
+            "#2a70b2",
+            "#ae3737",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 1030,
+        "y": 780,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b03c904b8a2abc77",
+        "type": "function",
+        "z": "722aa5038d688b69",
+        "name": "Humidity Error",
+        "func": "let fixedError = flow.get(\"HumFixedError\");\nlet percentError = flow.get(\"HumPercentError\");\nlet HumData = context.get(\"HumData\");\nlet timestamp = msg.payload.Timestamp;\nlet value = msg.payload.Humidity;\nvar reading = { x: timestamp, y: value };\nvar positive = { x: timestamp, y: value*(1+percentError/100) + fixedError };\nvar negative = { x: timestamp, y: value*(1-percentError/100) - fixedError};\n\nHumData.payload[0].data[0].push(reading);\nHumData.payload[0].data[1].push(positive);\nHumData.payload[0].data[2].push(negative);\ncontext.set(\"HumData\", HumData);\nreturn HumData;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "// Code added here will be run once\n// whenever the node is started.\nvar HumData = {\n    \"payload\": [{\n        \"series\": [\"Humidity\", \"+e\", \"-e\"],\n        \"data\": [[], [], []],\n        \"labels\": [\"\"]\n    }]\n}\ncontext.set(\"HumData\", HumData);",
+        "finalize": "",
+        "libs": [],
+        "x": 800,
+        "y": 740,
+        "wires": [
+            [
+                "7a9859f1c739ec44"
+            ]
+        ]
+    },
+    {
+        "id": "7a9859f1c739ec44",
+        "type": "ui_chart",
+        "z": "722aa5038d688b69",
+        "name": "",
+        "group": "dc97db42b7a8e543",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "label": "Humidity",
+        "chartType": "line",
+        "legend": "true",
+        "xformat": "mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": true,
+        "ymin": "",
+        "ymax": "",
+        "removeOlder": "100",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "604800",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#4343ff",
+            "#2a70b2",
+            "#ae3737",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 1020,
+        "y": 740,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "a11ae4480fc78368",
+        "type": "function",
+        "z": "722aa5038d688b69",
+        "name": "Smoke Error",
+        "func": "/*\nlet timestamp = msg.payload.Timestamp;\nlet smoke = msg.payload.Smoke;\nlet humidity = msg.payload.Humidity;\nlet temperature = msg.payload.Temperature;\nvar tempObj = { x: timestamp, y: temperature };\nvar humObj = { x: timestamp, y: humidity };\nvar smokeObj = { x: timestamp, y: smoke };\nvar systemData = flow.get(\"systemData\");\nsystemData.payload[0].data[0].push(tempObj);\nsystemData.payload[0].data[1].push(humObj);\nsystemData.payload[0].data[2].push(smokeObj);\nflow.set(\"systemData\", systemData);\nreturn systemData;\n*/\nlet fixedError = flow.get(\"SmokeFixedError\");\nlet percentError = flow.get(\"SmokePercentError\");\nlet smokeData = context.get(\"SmokeData\");\nlet timestamp = msg.payload.Timestamp;\nlet value = msg.payload.Smoke;\nvar reading = { x: timestamp, y: value };\nvar positive = { x: timestamp, y: value*(1+percentError/100) + fixedError };\nvar negative = { x: timestamp, y: value*(1-percentError/100) - fixedError};\n\nsmokeData.payload[0].data[0].push(reading);\nsmokeData.payload[0].data[1].push(positive);\nsmokeData.payload[0].data[2].push(negative);\ncontext.set(\"smokeData\", smokeData);\nreturn smokeData;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "// Code added here will be run once\n// whenever the node is started.\nvar SmokeData = {\n    \"payload\": [{\n        \"series\": [\"Smoke\", \"+e\", \"-e\"],\n        \"data\": [[], [], []],\n        \"labels\": [\"\"]\n    }]\n}\ncontext.set(\"SmokeData\", SmokeData);",
+        "finalize": "",
+        "libs": [],
+        "x": 790,
+        "y": 700,
+        "wires": [
+            [
+                "103a56e26c0b501c"
+            ]
+        ]
+    },
+    {
+        "id": "103a56e26c0b501c",
+        "type": "ui_chart",
+        "z": "722aa5038d688b69",
+        "name": "",
+        "group": "a974d20acdac20db",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "label": "Smoke",
+        "chartType": "line",
+        "legend": "true",
+        "xformat": "mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": true,
+        "ymin": "",
+        "ymax": "",
+        "removeOlder": "100",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "604800",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#c8c8c8",
+            "#2a70b2",
+            "#ae3737",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 1020,
+        "y": 700,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "484c564cfa93bd90",
+        "type": "regression",
+        "z": "722aa5038d688b69",
+        "name": "Tempfitting",
+        "dataSetSize": "0",
+        "regressionType": "polynomial",
+        "polynomialOrder": 2,
+        "precision": "3",
+        "xInputField": "payload.Timestamp",
+        "xInputFieldType": "msg",
+        "yInputField": "payload.Temperature",
+        "yInputFieldType": "msg",
+        "yOutputField": "y",
+        "yOutputFieldType": "msg",
+        "functionOutputField": "output",
+        "functionOutputFieldType": "msg",
+        "resultOnly": false,
+        "x": 790,
+        "y": 1180,
+        "wires": [
+            [
+                "0d3ef688baf3ed9a",
+                "32c1c7ad71f57ddf"
+            ]
+        ]
+    },
+    {
+        "id": "0200b9224c32bd18",
+        "type": "regression",
+        "z": "722aa5038d688b69",
+        "name": "Humfitting",
+        "dataSetSize": "0",
+        "regressionType": "polynomial",
+        "polynomialOrder": 2,
+        "precision": "3",
+        "xInputField": "payload.Timestamp",
+        "xInputFieldType": "msg",
+        "yInputField": "payload.Humidity",
+        "yInputFieldType": "msg",
+        "yOutputField": "y",
+        "yOutputFieldType": "msg",
+        "functionOutputField": "output",
+        "functionOutputFieldType": "msg",
+        "resultOnly": false,
+        "x": 780,
+        "y": 1320,
+        "wires": [
+            [
+                "ac247e0bdbf42bd0",
+                "8d515384af417f67"
+            ]
+        ]
+    },
+    {
+        "id": "c4e07f74c042a8bd",
+        "type": "regression",
+        "z": "722aa5038d688b69",
+        "name": "Smokefitting",
+        "dataSetSize": "0",
+        "regressionType": "polynomial",
+        "polynomialOrder": 2,
+        "precision": "3",
+        "xInputField": "payload.Timestamp",
+        "xInputFieldType": "msg",
+        "yInputField": "payload.Smoke",
+        "yInputFieldType": "msg",
+        "yOutputField": "y",
+        "yOutputFieldType": "msg",
+        "functionOutputField": "output",
+        "functionOutputFieldType": "msg",
+        "resultOnly": false,
+        "x": 790,
+        "y": 1460,
+        "wires": [
+            [
+                "22ea2df1c35788f8",
+                "b05e5742ee098abe"
+            ]
+        ]
+    },
+    {
+        "id": "c9a56b97d04c2d82",
+        "type": "join",
+        "z": "722aa5038d688b69",
+        "name": "",
+        "mode": "custom",
+        "build": "object",
+        "property": "payload",
+        "propertyType": "msg",
+        "key": "topic",
+        "joiner": "\\n",
+        "joinerType": "str",
+        "useparts": false,
+        "accumulate": false,
+        "timeout": "",
+        "count": "2",
+        "reduceRight": false,
+        "reduceExp": "",
+        "reduceInit": "",
+        "reduceInitType": "num",
+        "reduceFixup": "",
+        "x": 1310,
+        "y": 1740,
+        "wires": [
+            [
+                "32b79dda2963c808"
+            ]
+        ]
+    },
+    {
+        "id": "3d4891337271346c",
+        "type": "file in",
+        "z": "722aa5038d688b69",
+        "name": "File In",
+        "filename": "$flowContext(\"DataFilePath\")",
+        "filenameType": "jsonata",
+        "format": "utf8",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "allProps": false,
+        "x": 610,
+        "y": 1640,
+        "wires": [
+            [
+                "c9a56b97d04c2d82"
+            ]
+        ]
+    },
+    {
+        "id": "0d3ef688baf3ed9a",
+        "type": "function",
+        "z": "722aa5038d688b69",
+        "name": "TempSolver",
+        "func": "if(msg.output){\n    let threshold = flow.get(\"TempSolveThreshold\")\n    let f = msg.output.predict;\n    let tolerance = 1;\n    let maxIterations = 10000;\n    let low = 0;\n    let high = 3600;\n    let mid;\n    let iterations = 0;\n\n    while (iterations < maxIterations ) {\n        mid = (low + high) / 2;\n        const fMid = f(mid)[1];\n        // node.warn(mid + \":\"+fMid);\n        // Check if f(mid) exceeds the threshold\n        if (fMid > threshold) {\n            // If it does, we might have found a candidate; move the high pointer\n            high = mid;\n        } else {\n            // If it doesn't, move the low pointer\n            low = mid;\n        }\n\n        // Check convergence condition\n        if (high - low < tolerance && Math.abs(fMid-threshold) < tolerance) {\n            msg.breakdown = mid;\n            return msg;\n            //return { \"payload\": mid}; // Return the midpoint as the result\n        }\n\n        iterations++;\n    }\n    // If the maximum number of iterations is reached, return NaN\n    msg.breakdown = NaN;\n    return msg;\n}\nmsg.breakdown = NaN;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 990,
+        "y": 1120,
+        "wires": [
+            [
+                "cb0aa1d5e97b8266"
+            ]
+        ]
+    },
+    {
+        "id": "907251172097afd8",
+        "type": "ui_chart",
+        "z": "722aa5038d688b69",
+        "name": "",
+        "group": "e015dae087f660a8",
+        "order": 2,
+        "width": "12",
+        "height": "10",
+        "label": "Fitting",
+        "chartType": "line",
+        "legend": "true",
+        "xformat": "mm:ss",
+        "interpolate": "monotone",
+        "nodata": "",
+        "dot": true,
+        "ymin": "",
+        "ymax": "",
+        "removeOlder": "100",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "604800",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#ff4343",
+            "#4343ff",
+            "#c8c8c8",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 2850,
+        "y": 1480,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "32c1c7ad71f57ddf",
+        "type": "change",
+        "z": "722aa5038d688b69",
+        "name": "Temp Function",
+        "rules": [
+            {
+                "t": "delete",
+                "p": "payload",
+                "pt": "msg"
+            },
+            {
+                "t": "delete",
+                "p": "port",
+                "pt": "msg"
+            },
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "output.predict",
+                "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "Temperature",
+                "tot": "str"
+            },
+            {
+                "t": "delete",
+                "p": "y",
+                "pt": "msg"
+            },
+            {
+                "t": "delete",
+                "p": "output",
+                "pt": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1040,
+        "y": 1220,
+        "wires": [
+            [
+                "9a5104378526fdb2"
+            ]
+        ]
+    },
+    {
+        "id": "9a5104378526fdb2",
+        "type": "join",
+        "z": "722aa5038d688b69",
+        "name": "",
+        "mode": "custom",
+        "build": "object",
+        "property": "payload",
+        "propertyType": "msg",
+        "key": "topic",
+        "joiner": "\\n",
+        "joinerType": "str",
+        "useparts": false,
+        "accumulate": false,
+        "timeout": "",
+        "count": "3",
+        "reduceRight": false,
+        "reduceExp": "",
+        "reduceInit": "",
+        "reduceInitType": "num",
+        "reduceFixup": "",
+        "x": 2390,
+        "y": 1480,
+        "wires": [
+            [
+                "95de446b1709ade0"
+            ]
+        ]
+    },
+    {
+        "id": "ac247e0bdbf42bd0",
+        "type": "change",
+        "z": "722aa5038d688b69",
+        "name": "Hum Function",
+        "rules": [
+            {
+                "t": "delete",
+                "p": "payload",
+                "pt": "msg"
+            },
+            {
+                "t": "delete",
+                "p": "port",
+                "pt": "msg"
+            },
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "output.predict",
+                "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "Humidity",
+                "tot": "str"
+            },
+            {
+                "t": "delete",
+                "p": "y",
+                "pt": "msg"
+            },
+            {
+                "t": "delete",
+                "p": "output",
+                "pt": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1040,
+        "y": 1360,
+        "wires": [
+            [
+                "9a5104378526fdb2"
+            ]
+        ]
+    },
+    {
+        "id": "22ea2df1c35788f8",
+        "type": "change",
+        "z": "722aa5038d688b69",
+        "name": "Smoke Function",
+        "rules": [
+            {
+                "t": "delete",
+                "p": "payload",
+                "pt": "msg"
+            },
+            {
+                "t": "delete",
+                "p": "port",
+                "pt": "msg"
+            },
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "output.predict",
+                "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "Smoke",
+                "tot": "str"
+            },
+            {
+                "t": "delete",
+                "p": "y",
+                "pt": "msg"
+            },
+            {
+                "t": "delete",
+                "p": "output",
+                "pt": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1040,
+        "y": 1500,
+        "wires": [
+            [
+                "9a5104378526fdb2"
+            ]
+        ]
+    },
+    {
+        "id": "cad775482a6db6e8",
+        "type": "function",
+        "z": "722aa5038d688b69",
+        "name": "ms to s",
+        "func": "msg.payload.Timestamp = msg.payload.Timestamp/1000;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 620,
+        "y": 1180,
+        "wires": [
+            [
+                "484c564cfa93bd90"
+            ]
+        ]
+    },
+    {
+        "id": "8d515384af417f67",
+        "type": "function",
+        "z": "722aa5038d688b69",
+        "name": "HumSolver",
+        "func": "if(msg.output){\n    let threshold = flow.get(\"HumSolveThreshold\")\n    let f = msg.output.predict;\n    let tolerance = 1;\n    let maxIterations = 10000;\n    let low = 0;\n    let high = 3600;\n    let mid;\n    let iterations = 0;\n\n    while (iterations < maxIterations) {\n        mid = (low + high) / 2;\n        const fMid = f(mid)[1];\n        // node.warn(mid + \":\"+fMid);\n        // Check if f(mid) exceeds the threshold\n        if (fMid > threshold) {\n            // If it does, we might have found a candidate; move the high pointer\n            high = mid;\n        } else {\n            // If it doesn't, move the low pointer\n            low = mid;\n        }\n\n        // Check convergence condition\n        if (high - low < tolerance && Math.abs(fMid - threshold) < tolerance) {\n            msg.breakdown = mid;\n            return msg;\n            //return { \"payload\": mid}; // Return the midpoint as the result\n        }\n\n        iterations++;\n    }\n    // If the maximum number of iterations is reached, return NaN\n    msg.breakdown = NaN;\n    return msg;\n}\nmsg.breakdown = NaN;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1030,
+        "y": 1320,
+        "wires": [
+            [
+                "1ce2b20b48513f3e"
+            ]
+        ]
+    },
+    {
+        "id": "b05e5742ee098abe",
+        "type": "function",
+        "z": "722aa5038d688b69",
+        "name": "SmokeSolver",
+        "func": "if(msg.output){\n    let threshold = flow.get(\"SmokeSolveThreshold\")\n    let f = msg.output.predict;\n    let tolerance = 1;\n    let maxIterations = 10000;\n    let low = 0;\n    let high = 3600;\n    let mid;\n    let iterations = 0;\n\n    while (iterations < maxIterations) {\n        mid = (low + high) / 2;\n        const fMid = f(mid)[1];\n        // node.warn(mid + \":\"+fMid);\n        // Check if f(mid) exceeds the threshold\n        if (fMid > threshold) {\n            // If it does, we might have found a candidate; move the high pointer\n            high = mid;\n        } else {\n            // If it doesn't, move the low pointer\n            low = mid;\n        }\n\n        // Check convergence condition\n        if (high - low < tolerance && Math.abs(fMid - threshold) < tolerance) {\n            msg.breakdown = mid;\n            return msg;\n            //return { \"payload\": mid}; // Return the midpoint as the result\n        }\n\n        iterations++;\n    }\n    // If the maximum number of iterations is reached, return NaN\n    msg.breakdown = NaN;\n    return msg;\n}\nmsg.breakdown = NaN;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1030,
+        "y": 1460,
+        "wires": [
+            [
+                "65235067e45230d8"
+            ]
+        ]
+    },
+    {
+        "id": "1229946fc641f824",
+        "type": "function",
+        "z": "722aa5038d688b69",
+        "name": "ms to s",
+        "func": "msg.payload.Timestamp = msg.payload.Timestamp/1000;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 620,
+        "y": 1320,
+        "wires": [
+            [
+                "0200b9224c32bd18"
+            ]
+        ]
+    },
+    {
+        "id": "86ee55d958a3ec92",
+        "type": "function",
+        "z": "722aa5038d688b69",
+        "name": "ms to s",
+        "func": "msg.payload.Timestamp = msg.payload.Timestamp/1000;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 600,
+        "y": 1460,
+        "wires": [
+            [
+                "c4e07f74c042a8bd"
+            ]
+        ]
+    },
+    {
+        "id": "cb0aa1d5e97b8266",
+        "type": "function",
+        "z": "722aa5038d688b69",
+        "name": "adding unit",
+        "func": "msg.topic = \"Temperature\"\nif (msg.output)\n    msg.fitted = msg.output.predict(msg.payload.Timestamp/1000)[1];\nelse\n    msg.fitted = '-'\nif(! isNaN(msg.breakdown))\n    msg.breakdown = parseFloat(msg.breakdown).toFixed(2) + \" s\";\nelse \n    msg.breakdown = \"Unreachable\"\n\nlet TempOverHeating = flow.get(\"TempOverHeating\");\nif (msg.payload.Temperature >= TempOverHeating)\n    msg.tempLevel = \"Overheating\"\nelse\n    msg.tempLevel = \"Normal\";\n\nif(msg.output)\n    msg.equation = msg.output.string;\nelse\n    msg.equation = \"Need More Data\"\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1170,
+        "y": 1120,
+        "wires": [
+            [
+                "0b6a972230701908",
+                "54e49fadfce36129"
+            ]
+        ]
+    },
+    {
+        "id": "95de446b1709ade0",
+        "type": "function",
+        "z": "722aa5038d688b69",
+        "name": "fitter",
+        "func": "if(msg.payload.Temperature)\n{\n    var fittedPointsData = {\n        \"payload\": [{\n            \"series\": [\"Temperature\", \"Humidity\", \"Smoke\"],\n            \"data\": [[], [], []],\n            \"labels\": [\"\"]\n        }]\n    }\n    var original = flow.get(\"PointsData\");\n    let originalPayload = original.payload[0]; \n    let originalDataPoints = originalPayload.data;\n    let timestamps = originalDataPoints[0].map(dp => dp.x);  // Assuming all series have the same timestamps\n    // Loop through each timestamp and corresponding data points\n    for (let i = 0; i < timestamps.length; i++) {\n        let timestamp = timestamps[i];\n        let fittedTemp = msg.payload.Temperature(timestamp/1000)[1];\n        let fittedHum = msg.payload.Humidity(timestamp/1000)[1];\n        let fittedSmoke = msg.payload.Smoke(timestamp/1000)[1];\n        var tempObj = { x: timestamp, y: fittedTemp };\n        var humObj = { x: timestamp, y: fittedHum };\n        var smokeObj = { x: timestamp, y: fittedSmoke };\n        fittedPointsData.payload[0].data[0].push(tempObj);\n        fittedPointsData.payload[0].data[1].push(humObj);\n        fittedPointsData.payload[0].data[2].push(smokeObj);\n    }\n    return fittedPointsData;\n}\nelse{\nreturn null;\n}\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2630,
+        "y": 1480,
+        "wires": [
+            [
+                "907251172097afd8"
+            ]
+        ]
+    },
+    {
+        "id": "0b6a972230701908",
+        "type": "ui_template",
+        "z": "722aa5038d688b69",
+        "group": "881e7a85d7a2424f",
+        "name": "Temp_template",
+        "order": 4,
+        "width": "8",
+        "height": "4",
+        "format": "<style>\n    .alarm1 {\n        background: rgba(255, 0, 0,0.7); /* Red text */;\n        /* padding: 10px; */\n        border-radius: 20px;\n        font-family: Arial, sans-serif;\n    }\n\n    .table_status {\n        width: 90%;\n        /* border-collapse: collapse; */\n    }\n\n    .table_status td {\n        padding: 10px 10px;\n        vertical-align: middle;\n    }\n\n    .icon-cell {\n        text-align: center;\n        width: 30%;\n        color: white;\n    }\n\n    .text-large {\n        font-weight: bold;\n        font-size: 1.5em;\n        text-align: right;\n        /* padding-right: 50px; */\n        color: white;\n        /* border: 1px solid red; Debug border */\n    }\n\n    .text-small {\n        font-size: 1.5em;\n        color: white;\n        text-align: right;\n    }\n    .text-eq {\n        font-size: 1.3em;\n        /* border-bottom: 1px solid #000; */\n        padding: 10px 0;\n        color: white;\n        text-align: center;\n    }\n    .text-full {\n        font-weight: bold;\n        font-size: 1.5em;\n        /* border-bottom: 1px solid #000; */\n        padding: 10px 0;\n        color: white;\n        text-align: center;\n    }\n</style>\n\n<div class=\"status alarm1\">\n    <table class=\"table_status\">\n        <!-- Row 1 -->\n        <tr>\n            <td class=\"icon-cell\" rowspan=\"2\">\n                <i class=\"fa fa-thermometer-empty fa-spin fa-5x\" aria-hidden=\"false\"></i>\n            </td>\n            <td class=\"text-large\">{{msg.payload.Temperature}}</td>\n        </tr>\n        <!-- Row 2 -->\n        <tr>\n            <td class=\"text-small\">{{msg.tempLevel}}</td>\n        </tr>\n        <!-- Row 3 -->\n        <tr>\n            <td colspan=\"2\" class=\"text-eq\">{{msg.equation}}</td>\n        </tr>\n        <!-- Row 4 -->\n        <tr>\n            <td colspan=\"2\" class=\"text-full\">{{msg.breakdown}}</td>\n        </tr>\n    </table>\n</div>",
+        "storeOutMessages": false,
+        "fwdInMessages": false,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "x": 1500,
+        "y": 1120,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "89d98d361ef1caad",
+        "type": "ui_template",
+        "z": "722aa5038d688b69",
+        "group": "da0fa43e276c54de",
+        "name": "Hum_template",
+        "order": 4,
+        "width": "8",
+        "height": "4",
+        "format": "<style>\n    .alarm2 {\n        background: rgba(0, 0, 255,0.7); /* Red text */;\n        /* padding: 10px; */\n        border-radius: 20px;\n        font-family: Arial, sans-serif;\n    }\n\n    .table_status {\n        width: 90%;\n        /* border-collapse: collapse; */\n    }\n\n    .table_status td {\n        padding: 10px 10px;\n        vertical-align: middle;\n    }\n\n    .icon-cell {\n        text-align: center;\n        width: 30%;\n        color: white;\n    }\n\n    .text-large {\n        font-weight: bold;\n        font-size: 1.5em;\n        text-align: right;\n        /* padding-right: 50px; */\n        color: white;\n        /* border: 1px solid red; Debug border */\n    }\n\n    .text-small {\n        font-size: 1.5em;\n        color: white;\n        text-align: right;\n    }\n\n    .text-eq {\n    font-size: 1.3em;\n    /* border-bottom: 1px solid #000; */\n    padding: 10px 0;\n    color: white;\n    text-align: center;\n    }\n    .text-full {\n    font-weight: bold;\n    font-size: 1.5em;\n    /* border-bottom: 1px solid #000; */\n    padding: 10px 0;\n    color: white;\n    text-align: center;\n    }\n</style>\n\n<div class=\"status alarm2\">\n    <table class=\"table_status\">\n        <!-- Row 1 -->\n        <tr>\n            <td class=\"icon-cell\" rowspan=\"2\">\n                <i class=\"fa fa-tint fa-spin fa-5x\" aria-hidden=\"false\"></i>\n            </td>\n            <td class=\"text-large\">{{msg.payload.Humidity}}</td>\n        </tr>\n        <!-- Row 2 -->\n        <tr>\n            <td class=\"text-small\">{{msg.humLevel}}</td>\n        </tr>\n        <!-- Row 3 -->\n        <tr>\n            <td colspan=\"2\" class=\"text-eq\">{{msg.equation}}</td>\n        </tr>\n        <!-- Row 4 -->\n        <tr>\n            <td colspan=\"2\" class=\"text-full\">{{msg.breakdown}}</td>\n        </tr>\n    </table>\n</div>",
+        "storeOutMessages": false,
+        "fwdInMessages": false,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "x": 1500,
+        "y": 1340,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "617550b7d266f78c",
+        "type": "ui_template",
+        "z": "722aa5038d688b69",
+        "group": "1b455a86f2d7a993",
+        "name": "Smoke_template",
+        "order": 4,
+        "width": "8",
+        "height": "4",
+        "format": "<style>\n    .alarm3 {\n        background: rgba(200, 200, 200,1); /* Red text */;\n        /* padding: 10px; */\n        border-radius: 20px;\n        font-family: Arial, sans-serif;\n    }\n\n    .table_status {\n        width: 90%;\n        /* border-collapse: collapse; */\n    }\n\n    .table_status td {\n        padding: 10px 10px;\n        vertical-align: middle;\n    }\n\n    .icon-cell {\n        text-align: center;\n        width: 30%;\n        color: white;\n    }\n\n    .text-large {\n        font-weight: bold;\n        font-size: 1.5em;\n        text-align: right;\n        /* padding-right: 50px; */\n        color: white;\n        /* border: 1px solid red; Debug border */\n    }\n\n    .text-small {\n        font-size: 1.5em;\n        color: white;\n        text-align: right;\n    }\n\n    .text-eq {\n    font-size: 1.3em;\n    /* border-bottom: 1px solid #000; */\n    padding: 10px 0;\n    color: white;\n    text-align: center;\n    }\n    .text-full {\n    font-weight: bold;\n    font-size: 1.5em;\n    /* border-bottom: 1px solid #000; */\n    padding: 10px 0;\n    color: white;\n    text-align: center;\n    }\n</style>\n\n<div class=\"status alarm3\">\n    <table class=\"table_status\">\n        <!-- Row 1 -->\n        <tr>\n            <td class=\"icon-cell\" rowspan=\"2\">\n                <i class=\"fa fa-cloud fa-spin fa-5x\" aria-hidden=\"false\"></i>\n            </td>\n            <td class=\"text-large\">{{msg.payload.Smoke}}</td>\n        </tr>\n        <!-- Row 2 -->\n        <tr>\n            <td class=\"text-small\">{{msg.smokeLevel}}</td>\n        </tr>\n        <!-- Row 3 -->\n        <tr>\n            <td colspan=\"2\" class=\"text-eq\">{{msg.equation}}</td>\n        </tr>\n        <!-- Row 4 -->\n        <tr>\n            <td colspan=\"2\" class=\"text-full\">{{msg.breakdown}}</td>\n        </tr>\n    </table>\n</div>",
+        "storeOutMessages": false,
+        "fwdInMessages": false,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "x": 1490,
+        "y": 1440,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "c7146911b6b2fbf9",
+        "type": "json",
+        "z": "722aa5038d688b69",
+        "name": "",
+        "property": "payload",
+        "action": "obj",
+        "pretty": false,
+        "x": 330,
+        "y": 980,
+        "wires": [
+            [
+                "eb34aa64a4deae73",
+                "1f7c53cfb5a7c8c4",
+                "b03c904b8a2abc77",
+                "a11ae4480fc78368",
+                "cad775482a6db6e8",
+                "1229946fc641f824",
+                "86ee55d958a3ec92",
+                "c299d4c9627e3147",
+                "0c68257fd7a69923",
+                "870f57265b779601"
+            ]
+        ]
+    },
+    {
+        "id": "1ce2b20b48513f3e",
+        "type": "function",
+        "z": "722aa5038d688b69",
+        "name": "adding unit",
+        "func": "msg.topic = \"Humidity\"\nif (msg.output)\n    msg.fitted = msg.output.predict(msg.payload.Timestamp / 1000)[1];\nelse\n    msg.fitted = '-'\nif(! isNaN(msg.breakdown))\n    msg.breakdown = parseFloat(msg.breakdown).toFixed(2) + \" s\";\nelse \n    msg.breakdown = \"Unreachable\"\n\nlet HumLowThreshold = flow.get(\"HumLowThreshold\");\nlet HumHighThreshold = flow.get(\"HumHighThreshold\");\nif (msg.payload.Humidity <= HumLowThreshold)\n    msg.humLevel = \"Low\";\nelse if ((msg.payload.Humidity >= HumHighThreshold))\n    msg.humLevel = \"High\";\nelse\n    msg.humLevel = \"Normal\";\n\nif (msg.output)\n    msg.equation = msg.output.string;\nelse\n    msg.equation = \"Need More Data\"\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1210,
+        "y": 1320,
+        "wires": [
+            [
+                "89d98d361ef1caad",
+                "54e49fadfce36129"
+            ]
+        ]
+    },
+    {
+        "id": "65235067e45230d8",
+        "type": "function",
+        "z": "722aa5038d688b69",
+        "name": "adding unit",
+        "func": "msg.topic = \"Smoke\"\nif (msg.output)\n    msg.fitted = msg.output.predict(msg.payload.Timestamp / 1000)[1];\nelse\n    msg.fitted = '-'\nif(! isNaN(msg.breakdown))\n    msg.breakdown = parseFloat(msg.breakdown).toFixed(2) + \" s\";\nelse \n    msg.breakdown = \"Unreachable\"\n\n\nlet SmokeHighThreshold = flow.get(\"SmokeHighThreshold\");\nif (msg.payload.Smoke >= SmokeHighThreshold)\n    msg.smokeLevel = \"High\"\nelse\n    msg.smokeLevel = \"Normal\";\n\nif (msg.output)\n    msg.equation = msg.output.string;\nelse\n    msg.equation = \"Need More Data\"\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1210,
+        "y": 1460,
+        "wires": [
+            [
+                "617550b7d266f78c",
+                "54e49fadfce36129"
+            ]
+        ]
+    },
+    {
+        "id": "397e76c72054f123",
+        "type": "ui_gauge",
+        "z": "722aa5038d688b69",
+        "name": "",
+        "group": "2b6079ac8014e3d5",
+        "order": 3,
+        "width": "8",
+        "height": "6",
+        "gtype": "gage",
+        "title": "Temperature",
+        "label": "℃",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "50",
+        "colors": [
+            "#00b500",
+            "#e69100",
+            "#ca3838"
+        ],
+        "seg1": "23",
+        "seg2": "27",
+        "diff": false,
+        "className": "",
+        "x": 850,
+        "y": 960,
+        "wires": []
+    },
+    {
+        "id": "37b6888149e73b13",
+        "type": "ui_gauge",
+        "z": "722aa5038d688b69",
+        "name": "",
+        "group": "a974d20acdac20db",
+        "order": 3,
+        "width": "8",
+        "height": "6",
+        "gtype": "gage",
+        "title": "Smoke",
+        "label": "ppm",
+        "format": "{{value}}",
+        "min": "0",
+        "max": "1000",
+        "colors": [
+            "#00b500",
+            "#e69100",
+            "#ca3838"
+        ],
+        "seg1": "800",
+        "seg2": "950",
+        "diff": false,
+        "className": "",
+        "x": 840,
+        "y": 1040,
+        "wires": []
+    },
+    {
+        "id": "d007b476d6a1292f",
+        "type": "ui_gauge",
+        "z": "722aa5038d688b69",
+        "name": "",
+        "group": "dc97db42b7a8e543",
+        "order": 3,
+        "width": "8",
+        "height": "6",
+        "gtype": "gage",
+        "title": "Humidity",
+        "label": "%",
+        "format": "{{value}}",
+        "min": "0",
+        "max": "100",
+        "colors": [
+            "#00b500",
+            "#e69100",
+            "#ca3838"
+        ],
+        "seg1": "30",
+        "seg2": "70",
+        "diff": false,
+        "className": "",
+        "x": 840,
+        "y": 1000,
+        "wires": []
+    },
+    {
+        "id": "c299d4c9627e3147",
+        "type": "change",
+        "z": "722aa5038d688b69",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "payload.Temperature",
+                "tot": "msg",
+                "dc": true
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 640,
+        "y": 960,
+        "wires": [
+            [
+                "397e76c72054f123"
+            ]
+        ]
+    },
+    {
+        "id": "0c68257fd7a69923",
+        "type": "change",
+        "z": "722aa5038d688b69",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "payload.Humidity",
+                "tot": "msg",
+                "dc": true
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 640,
+        "y": 1000,
+        "wires": [
+            [
+                "d007b476d6a1292f"
+            ]
+        ]
+    },
+    {
+        "id": "870f57265b779601",
+        "type": "change",
+        "z": "722aa5038d688b69",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "payload.Smoke",
+                "tot": "msg",
+                "dc": true
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 640,
+        "y": 1040,
+        "wires": [
+            [
+                "37b6888149e73b13",
+                "402cfad66db6ac55"
+            ]
+        ]
+    },
+    {
+        "id": "402cfad66db6ac55",
+        "type": "function",
+        "z": "722aa5038d688b69",
+        "name": "function 4",
+        "func": "if (msg.payload > flow.get(\"SmokeSolveThreshold\"))\n    return msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 800,
+        "y": 1080,
+        "wires": [
+            [
+                "8c1f2587bb9ac86c"
+            ]
+        ]
+    },
+    {
+        "id": "9399825b7a708cef",
+        "type": "ui_audio",
+        "z": "722aa5038d688b69",
+        "name": "",
+        "group": "a974d20acdac20db",
+        "voice": "",
+        "always": true,
+        "x": 1140,
+        "y": 1040,
+        "wires": []
+    },
+    {
+        "id": "8c1f2587bb9ac86c",
+        "type": "file in",
+        "z": "722aa5038d688b69",
+        "name": "",
+        "filename": "$flowContext(\"AlarmFilePath\")",
+        "filenameType": "jsonata",
+        "format": "",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "allProps": false,
+        "x": 960,
+        "y": 1080,
+        "wires": [
+            [
+                "9399825b7a708cef"
+            ]
+        ]
+    },
+    {
+        "id": "fdd437f14ee08633",
+        "type": "ui_chart",
+        "z": "722aa5038d688b69",
+        "name": "",
+        "group": "e015dae087f660a8",
+        "order": 1,
+        "width": "12",
+        "height": "10",
+        "label": "Measurements",
+        "chartType": "line",
+        "legend": "true",
+        "xformat": "mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": true,
+        "ymin": "",
+        "ymax": "",
+        "removeOlder": "100",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "604800",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#ff4c4c",
+            "#4343ff",
+            "#c8c8c8",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 1040,
+        "y": 860,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "f2c0a33767e5c0fa",
+        "type": "inject",
+        "z": "722aa5038d688b69",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "[]",
+        "payloadType": "json",
+        "x": 910,
+        "y": 640,
+        "wires": [
+            [
+                "103a56e26c0b501c",
+                "7a9859f1c739ec44",
+                "67caee253fd33f94",
+                "fdd437f14ee08633"
+            ]
+        ]
+    },
+    {
+        "id": "1c48170ac4fa3350",
+        "type": "ui_button",
+        "z": "722aa5038d688b69",
+        "name": "",
+        "group": "e015dae087f660a8",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "clear",
+        "tooltip": "Clears data and makes a new file",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "payload": "[]",
+        "payloadType": "json",
+        "topic": "button",
+        "topicType": "str",
+        "x": 830,
+        "y": 920,
+        "wires": [
+            [
+                "fdd437f14ee08633",
+                "67caee253fd33f94",
+                "7a9859f1c739ec44",
+                "103a56e26c0b501c",
+                "907251172097afd8",
+                "0b6a972230701908",
+                "89d98d361ef1caad",
+                "617550b7d266f78c",
+                "74b6b677723e9be5"
+            ]
+        ]
+    },
+    {
+        "id": "74b6b677723e9be5",
+        "type": "function",
+        "z": "722aa5038d688b69",
+        "name": "New File",
+        "func": "\n// Prepare the CSV header\nlet csvData = \"Timestamp,Temperature,Fitted Temperature,Humidity,Fitted Humidity,Smoke,Fitted Smoke,Temperature Breakdown,Humidity Breakdown,Smoke Breakdown\\n\";\n\n// Set the CSV string as the payload to send to the next node\nreturn { \"payload\": csvData };",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1120,
+        "y": 920,
+        "wires": [
+            [
+                "ef33fb296bd31054"
+            ]
+        ]
+    },
+    {
+        "id": "ef33fb296bd31054",
+        "type": "file",
+        "z": "722aa5038d688b69",
+        "name": "File Out",
+        "filename": "$flowContext(\"DataFilePath\")",
+        "filenameType": "jsonata",
+        "appendNewline": false,
+        "createDir": true,
+        "overwriteFile": "true",
+        "encoding": "none",
+        "x": 1300,
+        "y": 920,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "5d1027080191a90e",
+        "type": "function",
+        "z": "722aa5038d688b69",
+        "name": "Prepare CSV",
+        "func": "// // Extract the data from the input payload\n// var original = flow.get(\"PointsData\");\n// var fitted = msg;\n\n// let originalpayload = original.payload[0]; \n// let fittedpayload = fitted.payload[0];\n// let originaldataPoints = originalpayload.data;\n// let fitteddataPoints = fittedpayload.data;\n// let timestamps = originaldataPoints[0].map(dp => dp.x);  // Assuming all series have the same timestamps\n\n// // Prepare the CSV header\n// let csvData = \"Timestamp,Temperature,Fitted Temperature,Humidity,Fitted Humidity,Smoke,Fitted Smoke\\n\";\n\n// // Loop through each timestamp and corresponding data points\n// for (let i = 0; i < timestamps.length; i++) {\n//     let timestamp = timestamps[i];\n\n//     // Get values for each series\n//     let temperature = originaldataPoints[0][i].y ;\n//     let humidity = originaldataPoints[1][i].y;\n//     let smoke = originaldataPoints[2][i].y ;\n//     let fittedtemperature = fitteddataPoints[0][i].y ;\n//     let fittedhumidity = fitteddataPoints[1][i].y;\n//     let fittedsmoke = fitteddataPoints[2][i].y ;\n//     // Add a row to the CSV string\n//     csvData += `${timestamp},${temperature},${fittedtemperature},${humidity},${fittedhumidity},${smoke},${fittedsmoke}\\n`;\n// }\n\n// // Set the CSV string as the payload to send to the next node\n// return {\"payload\":csvData};\nlet values = msg.payload.Temperature.payload;\nlet timestamp = values.Timestamp;\nlet temperature = values.Temperature;\nlet humidity = values.Humidity;\nlet smoke = values.Smoke;\nlet fittedtemperature = msg.payload.Temperature.fitted;\nlet fittedhumidity = msg.payload.Humidity.fitted;\nlet fittedsmoke = msg.payload.Smoke.fitted;\nlet tempBD = msg.payload.Temperature.breakdown;\nlet humBD = msg.payload.Humidity.breakdown;\nlet smokeBD = msg.payload.Smoke.breakdown;\nlet csvData = `${timestamp},${temperature},${fittedtemperature},${humidity},${fittedhumidity},${smoke},${fittedsmoke},${tempBD},${humBD},${smokeBD}\\n`;\nreturn { \"payload\": csvData };",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1550,
+        "y": 1000,
+        "wires": [
+            [
+                "cf96562335b3db0d"
+            ]
+        ]
+    },
+    {
+        "id": "cf96562335b3db0d",
+        "type": "file",
+        "z": "722aa5038d688b69",
+        "name": "File Out",
+        "filename": "$flowContext(\"DataFilePath\")",
+        "filenameType": "jsonata",
+        "appendNewline": false,
+        "createDir": true,
+        "overwriteFile": "false",
+        "encoding": "none",
+        "x": 1980,
+        "y": 960,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "54e49fadfce36129",
+        "type": "join",
+        "z": "722aa5038d688b69",
+        "name": "",
+        "mode": "custom",
+        "build": "object",
+        "property": "",
+        "propertyType": "full",
+        "key": "topic",
+        "joiner": "\\n",
+        "joinerType": "str",
+        "useparts": false,
+        "accumulate": false,
+        "timeout": "",
+        "count": "3",
+        "reduceRight": false,
+        "reduceExp": "",
+        "reduceInit": "",
+        "reduceInitType": "num",
+        "reduceFixup": "",
+        "x": 1430,
+        "y": 1180,
+        "wires": [
+            [
+                "5d1027080191a90e"
+            ]
+        ]
+    },
+    {
+        "id": "0212144af350fcbd",
+        "type": "ui_spacer",
+        "z": "722aa5038d688b69",
+        "name": "spacer",
+        "group": "2b6079ac8014e3d5",
+        "order": 2,
+        "width": 1,
+        "height": 1
+    },
+    {
+        "id": "b8ed4dd18bd07ccf",
+        "type": "ui_spacer",
+        "z": "722aa5038d688b69",
+        "name": "spacer",
+        "group": "dc97db42b7a8e543",
+        "order": 2,
+        "width": 1,
+        "height": 1
+    },
+    {
+        "id": "adf034403ece59b0",
+        "type": "ui_spacer",
+        "z": "722aa5038d688b69",
+        "name": "spacer",
+        "group": "a974d20acdac20db",
+        "order": 2,
+        "width": 1,
+        "height": 1
+    },
+    {
+        "id": "c3132729de11db57",
+        "type": "serial-port",
+        "name": "",
+        "serialport": "COM12",
+        "serialbaud": "115200",
+        "databits": "8",
+        "parity": "none",
+        "stopbits": "1",
+        "waitfor": "",
+        "dtr": "none",
+        "rts": "none",
+        "cts": "none",
+        "dsr": "none",
+        "newline": "\\n",
+        "bin": "false",
+        "out": "char",
+        "addchar": "",
+        "responsetimeout": "10000"
+    },
+    {
+        "id": "91e3155fe81caa6b",
+        "type": "ui_group",
+        "z": "722aa5038d688b69",
+        "name": "Default",
+        "tab": "e7446e4a50a9d2cc",
+        "order": 1,
+        "disp": false,
+        "width": "12",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "2b6079ac8014e3d5",
+        "type": "ui_group",
+        "z": "722aa5038d688b69",
+        "name": "Temp Chart",
+        "tab": "2c345b5969764468",
+        "order": 1,
+        "disp": false,
+        "width": "8",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "dc97db42b7a8e543",
+        "type": "ui_group",
+        "z": "722aa5038d688b69",
+        "name": "Hum Chart",
+        "tab": "2c345b5969764468",
+        "order": 2,
+        "disp": false,
+        "width": "8",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "a974d20acdac20db",
+        "type": "ui_group",
+        "z": "722aa5038d688b69",
+        "name": "Smoke Chart",
+        "tab": "2c345b5969764468",
+        "order": 3,
+        "disp": false,
+        "width": "8",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "e015dae087f660a8",
+        "type": "ui_group",
+        "z": "722aa5038d688b69",
+        "name": "Graph",
+        "tab": "93084136345a1f5e",
+        "order": 4,
+        "disp": false,
+        "width": "24",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "881e7a85d7a2424f",
+        "type": "ui_group",
+        "z": "722aa5038d688b69",
+        "name": "Temperature",
+        "tab": "93084136345a1f5e",
+        "order": 1,
+        "disp": false,
+        "width": "8",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "da0fa43e276c54de",
+        "type": "ui_group",
+        "z": "722aa5038d688b69",
+        "name": "Humidity ",
+        "tab": "93084136345a1f5e",
+        "order": 2,
+        "disp": false,
+        "width": "8",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "1b455a86f2d7a993",
+        "type": "ui_group",
+        "z": "722aa5038d688b69",
+        "name": "Smoke",
+        "tab": "93084136345a1f5e",
+        "order": 3,
+        "disp": false,
+        "width": "8",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "e7446e4a50a9d2cc",
+        "type": "ui_tab",
+        "z": "722aa5038d688b69",
+        "name": "Search",
+        "icon": "fa-search",
+        "order": 3,
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "2c345b5969764468",
+        "type": "ui_tab",
+        "z": "722aa5038d688b69",
+        "name": "Individual",
+        "icon": "fa-windows",
+        "order": 2,
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "93084136345a1f5e",
+        "type": "ui_tab",
+        "z": "722aa5038d688b69",
+        "name": "Monitoring",
+        "icon": "fa-desktop",
+        "order": 1,
+        "disabled": false,
+        "hidden": false
+    }
+]
